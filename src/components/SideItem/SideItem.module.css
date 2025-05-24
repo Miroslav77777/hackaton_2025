@@ -1,0 +1,40 @@
+.item_wrapper{
+    display: flex;
+    align-items: center;
+    padding-left: 24px;
+    gap: 11px;
+    width: 100%;
+    color: #FFFFFF;
+}
+
+.item_wrapper_active{
+    color: #5ED05E;
+    fill: #5ED05E;
+    display: flex;
+    align-items: center;
+    padding-left: 24px;
+    gap: 11px;
+    width: 100%;
+}
+
+.item_wrapper_active>svg{
+    fill: #5ED05E;
+}
+
+.name, .name_active, .name_blk{
+    
+    font-feature-settings: 'liga' off, 'clig' off;
+
+    /* button/large */
+    font-family: var(--fontFamily, Roboto);
+    font-size: var(--font-size-09375-rem, 15px);
+    font-style: normal;
+    font-weight: var(--fontWeightMedium, 500);
+    line-height: 26px; /* 173.333% */
+    letter-spacing: 0.46px;
+    text-transform: uppercase;
+}
+
+.name_blk{
+    color: #252736;
+}
