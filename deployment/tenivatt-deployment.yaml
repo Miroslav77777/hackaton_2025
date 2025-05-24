@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tenivatt-server
+  namespace: tenivatt
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tenivatt-server
+  template:
+    metadata:
+      labels:
+        app: tenivatt-server
+    spec:
+      containers:
+      - name: http
+        image: registry.example.com/tenivatt:latest
+        imagePullPolicy: IfNotPresent
+        command: ["/tenivatt", "server"]  # ваш cmd/server main
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: DB_HOST
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: DB_NAME
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: DB_PASSWORD
+        - name: CITY
+          valueFrom:
+            configMapKeyRef:
+              name: tenivatt-config
+              key: CITY
+        - name: ANALYSIS_WINDOW_DAYS
+          valueFrom:
+            configMapKeyRef:
+              name: tenivatt-config
+              key: ANALYSIS_WINDOW_DAYS
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10

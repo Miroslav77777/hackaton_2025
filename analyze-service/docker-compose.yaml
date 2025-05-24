@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:17
+    container_name: tenivatt-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: tenivatt
+      POSTGRES_PASSWORD: ZXCghoul1337228
+      POSTGRES_DB: tenivatt
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:
