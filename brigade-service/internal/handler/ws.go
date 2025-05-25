@@ -10,21 +10,15 @@ import (
 )
 
 var upgrader = websocket.Upgrader{
-	CheckOrigin: func(*http.Request) bool { return true },
+	CheckOrigin: func(r *http.Request) bool { return true },
 }
 
-func (h *Handler) websocketReports(c *gin.Context) {
-	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
-	if err != nil {
-		return
-	}
-	ws.Register <- conn
-	defer func() { ws.Unregister <- conn }()
-
-	// читаем, чтобы связь не закрылась (пинг-понт)
-	for {
-		if _, _, err := conn.ReadMessage(); err != nil {
+func registerWsRoutes(rg *gin.RouterGroup, hub *ws.Hub) {
+	rg.GET("/reports/ws", func(c *gin.Context) {
+		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+		if err != nil {
 			return
 		}
-	}
+		hub.Register("all_reports", conn)
+	})
 }

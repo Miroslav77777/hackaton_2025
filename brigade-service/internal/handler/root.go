@@ -1,29 +1,19 @@
 package handler
 
 import (
-	"github.com/gin-gonic/gin"
-
+	"brigade-service/internal/db"
 	"brigade-service/internal/service"
+	"brigade-service/internal/ws"
+
+	"github.com/gin-gonic/gin"
 )
 
-// Handler агрегирует все под-хендлеры.
-type Handler struct {
-	brigade *service.BrigadeService
-	route   *service.RouteService
-	task    *service.TaskService
-	bucket  *service.BucketService // ← new
-}
+func RegisterRoutes(r *gin.Engine, repo *db.Repo, osmRepo *db.OSMRepo, hub *ws.Hub, rptSvc *service.ReportService) {
+	v1 := r.Group("/v1")
 
-func New(br *service.BrigadeService, rt *service.RouteService,
-	tk *service.TaskService, bk *service.BucketService) *Handler {
-	return &Handler{brigade: br, route: rt, task: tk, bucket: bk}
-}
-
-// Register навешивает ВСЕ маршруты на переданный Gin-роутер.
-// Здесь вызываем приватные регистраторы из других файлов.
-func (h *Handler) Register(r *gin.Engine) {
-	registerBrigade(r, h.brigade, h.route)
-	registerRoute(r, h.route)
-	h.registerTask(r, h.task, h.route)
-	h.registerInbox(r, h.bucket) // ← новинка
+	// регистрируем роуты по модулям
+	registerBrigadeRoutes(v1, repo)
+	registerBatchRoutes(v1, repo, osmRepo)
+	registerWsRoutes(v1, hub)
+	registerReportRoutes(v1, repo, rptSvc, hub)
 }

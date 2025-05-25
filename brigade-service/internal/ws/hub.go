@@ -1,34 +1,39 @@
 package ws
 
-import "github.com/gorilla/websocket"
+import (
+	"sync"
 
-// Event отправляется фронтам, когда готов новый PDF.
-type Event struct {
-	BrigadeID string `json:"brigade_id"`
-	ReportID  string `json:"report_id"`
-	FilePath  string `json:"file_path"`
-}
-
-var (
-	Register   = make(chan *websocket.Conn, 8)
-	Unregister = make(chan *websocket.Conn, 8)
-	Broadcast  = make(chan Event, 32)
+	"github.com/gorilla/websocket"
 )
 
-// RunHub — концентратор WebSocket-клиентов.
-func RunHub() {
-	clients := map[*websocket.Conn]struct{}{}
-	for {
-		select {
-		case c := <-Register:
-			clients[c] = struct{}{}
-		case c := <-Unregister:
-			delete(clients, c)
-			c.Close()
-		case ev := <-Broadcast:
-			for c := range clients {
-				_ = c.WriteJSON(ev)
-			}
-		}
+// Hub теперь хранит и per-brigade, и глобальные подключениями
+type Hub struct {
+	mu    sync.RWMutex
+	conns map[string]map[*websocket.Conn]bool // ключ — любая категория, для глобальных — "all"
+}
+
+// NewHub инициализирует оба
+func NewHub() *Hub {
+	return &Hub{
+		conns: make(map[string]map[*websocket.Conn]bool),
+	}
+}
+
+// Register по произвольному ключу
+func (h *Hub) Register(key string, conn *websocket.Conn) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if h.conns[key] == nil {
+		h.conns[key] = make(map[*websocket.Conn]bool)
+	}
+	h.conns[key][conn] = true
+}
+
+// Broadcast всем, кто зареган на key
+func (h *Hub) Broadcast(key string, msg interface{}) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	for conn := range h.conns[key] {
+		conn.WriteJSON(msg)
 	}
 }

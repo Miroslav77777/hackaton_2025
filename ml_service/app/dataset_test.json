@@ -1,0 +1,117 @@
+import pandas as pd, numpy as np, warnings, optuna
+from catboost import CatBoostClassifier, Pool
+from sklearn.metrics import (accuracy_score, precision_score, recall_score,
+                             f1_score, roc_auc_score, log_loss,
+                             precision_recall_curve, classification_report)
+from sklearn.calibration import CalibratedClassifierCV
+from sklearn.model_selection import StratifiedKFold
+
+warnings.filterwarnings('ignore', category=UserWarning)
+
+# ---------- 1. Загрузка ----------
+train = pd.read_csv('./data/features_train.csv')
+test  = pd.read_csv('./data/features_test.csv')
+
+# ---------- 2. Базовый препроцесс ----------
+rename = {f'consumption.{i}': f'consumption_{i}' for i in range(1, 13)}
+for df in (train, test):
+    df.rename(columns=rename, inplace=True)
+    months = [f'consumption_{i}' for i in range(1, 13)]
+    df['total_consumption'] = df[months].sum(axis=1)
+    df['avg_consumption']   = df[months].mean(axis=1)
+    df['kWh_per_room']      = df['total_consumption'] / (df['roomsCount']     + 1e-6)
+    df['kWh_per_resident']  = df['total_consumption'] / (df['residentsCount'] + 1e-6)
+    df['kWh_per_m2']        = df['total_consumption'] / (df['totalArea']      + 1e-6)
+    df.drop(columns=['address'], errors='ignore', inplace=True)
+
+cat_cols = ['buildingType']
+num_cols = [c for c in train.columns if c not in cat_cols + ['isCommercial', 'accountId']]
+
+X   = train[cat_cols + num_cols]
+y   = train['isCommercial'].astype(int)
+X_te= test [cat_cols + num_cols]
+y_te= test ['isCommercial'].astype(int)
+
+# ---------- 3. Быстрый Optuna → 15 трейлов (GPU) ----------
+def objective(trial):
+    params = {
+        'depth'           : trial.suggest_int('depth', 5, 10),
+        'l2_leaf_reg'     : trial.suggest_float('l2', 1, 10),
+        'learning_rate'   : trial.suggest_float('lr', 0.01, 0.1, log=True),
+        'bagging_temperature': trial.suggest_float('temp', 0, 1),
+        'iterations'      : 4000,            # много деревьев
+        'loss_function'   : 'Logloss',
+        'eval_metric'     : 'AUC',
+        'task_type'       : 'GPU',
+        'devices'         : '0',
+        'random_seed'     : 42,
+        'od_type'         : 'Iter',
+        'od_wait'         : 150,
+        'verbose'         : 0,
+        'class_weights'   : {0:1, 1:(y==0).sum()/(y==1).sum()}
+    }
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    aucs = []
+    for tr_idx, vl_idx in cv.split(X, y):
+        m = CatBoostClassifier(**params)
+        m.fit(Pool(X.iloc[tr_idx], y.iloc[tr_idx], cat_features=cat_cols),
+              eval_set=Pool(X.iloc[vl_idx], y.iloc[vl_idx], cat_features=cat_cols))
+        aucs.append(m.best_score_['validation']['AUC'])
+    return np.mean(aucs)
+
+study = optuna.create_study(direction='maximize')
+study.optimize(objective, n_trials=15, show_progress_bar=False)
+best = study.best_trial.params
+best.update({
+    'iterations' : 4000,
+    'task_type'  : 'GPU',
+    'devices'    : '0',
+    'loss_function':'Logloss',
+    'eval_metric':'AUC',
+    'random_seed':42,
+    'od_type':'Iter','od_wait':150,
+    'verbose':0,
+    'class_weights':{0:1,1:(y==0).sum()/(y==1).sum()}
+})
+
+print('\n🟢 Best GPU-CatBoost params:', best)
+
+# ---------- 4. 5-fold бленд + изотоническая калибровка ----------
+kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+oof = np.zeros(len(y)); test_pred = np.zeros(len(test))
+for tr, vl in kf.split(X, y):
+    m = CatBoostClassifier(**best)
+    m.fit(Pool(X.iloc[tr], y.iloc[tr], cat_features=cat_cols),
+          eval_set=Pool(X.iloc[vl], y.iloc[vl], cat_features=cat_cols))
+    oof[vl]    = m.predict_proba(X.iloc[vl])[:,1]
+    test_pred += m.predict_proba(X_te)[:,1] / kf.n_splits
+
+# Калибруем вероятность на оут-оф-фолд
+cal = CalibratedClassifierCV(method='isotonic', cv='prefit')
+cal.fit(oof.reshape(-1,1), y)
+test_prob = cal.predict_proba(test_pred.reshape(-1,1))[:,1]
+
+# ---------- 5. Подбираем порог ----------
+p,r,t = precision_recall_curve(y_te, test_prob)
+f1 = 2*p*r/(p+r+1e-6); best_t = t[np.nanargmax(f1[:-1])]
+print(f'\n📈  Best threshold={best_t:.3f}, max F1={f1.max():.3f}')
+
+# ---------- 6. Итоговые метрики ----------
+pred = (test_prob >= best_t).astype(int)
+print('\nFinal metrics:')
+print('Accuracy :', round(accuracy_score(y_te,pred),3))
+print('Precision:', round(precision_score(y_te,pred),3))
+print('Recall   :', round(recall_score(y_te,pred),3))
+print('F1-score :', round(f1_score(y_te,pred),3))
+print('ROC AUC  :', round(roc_auc_score(y_te,test_prob),3))
+print('Logloss  :', round(log_loss(y_te,test_prob),3))
+print('\n', classification_report(y_te,pred,target_names=['Residential','Commercial']))
+
+# ---------- 7. Таблица по accountId ----------
+out = test[['accountId']].copy()
+out['prob_commercial'] = (test_prob*100).round(2)
+out['predicted']       = pred
+out['actual']          = y_te
+out['correct']         = out['predicted']==out['actual']
+print('\nPreview:')
+print(out.head(40).to_string(index=False))

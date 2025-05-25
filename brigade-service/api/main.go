@@ -1,65 +1,43 @@
-// cmd/api/main.go
 package main
 
 import (
 	"context"
-	"log/slog"
-	"os"
+	"log"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 
 	"brigade-service/internal/db"
 	"brigade-service/internal/handler"
-	"brigade-service/internal/report"
 	"brigade-service/internal/service"
-	"brigade-service/internal/solver"
 	"brigade-service/internal/ws"
 )
 
 func main() {
-	/* ---------- 1. .env ---------- */
-	_ = godotenv.Load()
+	// 1) Подключение к БД
+	dbx := sqlx.MustConnect("postgres", "postgres://tenivatt:ZXCghoul1337228@217.198.6.110:5432/brigadier?sslmode=disable")
+	repo := db.NewRepo(dbx)
+	dbs := sqlx.MustConnect("postgres", "postgres://tenivatt:ZXCghoul1337228@217.198.6.110:5432/tenivatt?sslmode=disable")
+	osmRepo := db.NewOSMRepo(dbs)
 
-	/* ---------- 2. PostgreSQL ---------- */
-	ctx := context.Background()
-	pg, err := db.Connect(ctx)
+	// 2) Scheduler (без изменений)
+	sched := service.NewScheduler(repo)
+	go sched.Run(context.Background())
+
+	// 3) Hub для WebSocket
+	hub := ws.NewHub()
+
+	// 4) ReportService (шаблон по пути reports/tmpl/report.tmpl)
+	rptSvc, err := service.NewReportService("reports/tmpl/report.tmpl")
 	if err != nil {
-		slog.Error("db connect", "err", err)
-		return
+		log.Fatalf("unable to parse report template: %v", err)
 	}
-	defer pg.Close()
 
-	/* ---------- 3. бизнес-сервисы ---------- */
-	brigadeSvc := service.NewBrigadeService(pg)
+	// 5) HTTP
+	r := gin.Default()
+	handler.RegisterRoutes(r, repo, osmRepo, hub, rptSvc)
 
-	slv := solver.Wrap(
-		solver.NewTSP(os.Getenv("DGIS_KEY")),
-		solver.NewNN(),
-	)
-	routeSvc := service.NewRouteService(pg, slv)
-
-	taskSvc := service.NewTaskService(pg) // ← NEW
-
-	bucketSvc := service.NewBucketService(pg)
-	service.StartBucketFlusher(pg, bucketSvc, 10) // timeout 10 мин
-
-	/* ---------- 4. фоновые воркеры ---------- */
-	go ws.RunHub()         // WebSocket-хаб
-	report.StartWorker(pg) // PDF-репорты
-
-	/* ---------- 5. HTTP ---------- */
-	h := handler.New(brigadeSvc, routeSvc, taskSvc, bucketSvc)
-	r := gin.New()
-	r.Use(gin.Recovery())
-	h.Register(r)
-
-	// раздаём PDF
-	r.Static("/reports", "./reports")
-
-	addr := ":3001"
-	slog.Info("listen", "addr", addr)
-	if err := r.Run(addr); err != nil {
-		slog.Error("fatal", "err", err)
-	}
+	log.Println("listening on :3001")
+	r.Run(":3001")
 }

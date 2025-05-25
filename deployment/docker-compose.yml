@@ -1,0 +1,50 @@
+version: '3.8'
+services:
+  analyze-service:
+    build:
+      context: ../analyze-service
+      dockerfile: Dockerfile
+    container_name: analyze-service
+    ports:
+      - "8081:8080"
+    restart: unless-stopped
+  api-gateway:
+    build:
+      context: ../api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+  auth-service:
+    build:
+      context: ../auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    ports:
+      - "8082:8080"
+    restart: unless-stopped
+  brigade-service:
+    build:
+      context: ../brigade-service
+      dockerfile: Dockerfile
+    container_name: brigade-service
+    ports:
+      - "8083:8080"
+    restart: unless-stopped
+  ml-service:
+    build:
+      context: ../ml-service
+      dockerfile: Dockerfile
+    container_name: ml-service
+    ports:
+      - "8084:8080"
+    restart: unless-stopped
+  risk-service:
+    build:
+      context: ../risk-service
+      dockerfile: Dockerfile
+    container_name: risk-service
+    ports:
+      - "8085:8080"
+    restart: unless-stopped
