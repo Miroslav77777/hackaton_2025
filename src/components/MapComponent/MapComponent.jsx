@@ -9,6 +9,9 @@ import { autorun } from 'mobx';
 
 import mapStore from '../../stores/MapStore'; // путь подставь свой
 
+import { observer } from 'mobx-react-lite';
+import themeStore from '../../stores/ThemeStore';
+
 const TILE_SIZE = 0.003; // ~500 м
 
 
@@ -21,7 +24,7 @@ const TileLayerComponent = ({ tile, layerGroup, tileLayersRef, cacheRef }) => {
     queryKey: ['buildings', tile.south, tile.west, tile.north, tile.east],
     queryFn: async ({ queryKey }) => {
       const [, s, w, n, e] = queryKey;
-      const res = await fetch(`http://localhost:5000/buildings?south=${s}&west=${w}&north=${n}&east=${e}`);
+      const res = await fetch(`http://51.250.38.26:80/api/buildings?south=${s}&west=${w}&north=${n}&east=${e}`);
       return await res.json();
     },
     staleTime: 1000 * 60 * 5,
@@ -226,18 +229,28 @@ const OverpassBuildings = () => {
 
 const queryClient = new QueryClient();
 
-export default function MapComponent() {
-  const center = [45.03547, 38.97531]; // Краснодар
+const MapComponent = observer(() => {
+  const center = mapStore.center;
+  const zoom = mapStore.zoom;
+
+  const tileUrl =
+    themeStore.mode === 'dark'
+      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+      : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 
   return (
     <QueryClientProvider client={queryClient}>
-      <MapContainer center={center} zoom={13} style={{ height: '100vh', width: '100vw' }}>
-        <TileLayer
-          attribution="&copy; OpenStreetMap contributors"
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        />
+      <MapContainer
+        key={themeStore.mode} // 🔁 Перерендер при смене темы
+        center={center}
+        zoom={zoom}
+        style={{ height: '100vh', width: '100vw' }}
+      >
+        <TileLayer attribution="&copy; OpenStreetMap contributors" url={tileUrl} />
         <OverpassBuildings />
       </MapContainer>
     </QueryClientProvider>
   );
-}
+});
+
+export default MapComponent

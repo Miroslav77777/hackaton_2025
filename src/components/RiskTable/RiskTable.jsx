@@ -8,9 +8,15 @@ import {
   TableHead,
   TableRow,
   Button,
-  Typography,
-  Paper
+  Typography
 } from '@mui/material';
+
+import { useNavigate } from 'react-router-dom';
+import mapStore from '../../stores/MapStore';
+
+
+import { observer } from 'mobx-react-lite';
+import themeStore from '../../stores/ThemeStore';
 
 const getRiskColor = (risk) => {
   if (risk >= 95) return '#FF0000';
@@ -21,86 +27,102 @@ const getRiskColor = (risk) => {
   return '#3BE364';
 };
 
-const data = [
-  {
-    id: 1,
-    street: 'ул. Героя Советского Союза Дмитрия...',
-    risk: 100,
-    pattern: 'Майнинг',
-    exceed: '9800 кВч/мес'
-  },
-  {
-    id: 2,
-    street: 'ул. Селезнёва, 210',
-    risk: 85,
-    pattern: 'Майнинг',
-    exceed: '2105 кВч/мес'
-  },
-  {
-    id: 3,
-    street: 'ул. Таманская улица, 153к2',
-    risk: 92,
-    pattern: 'Ахуи',
-    exceed: '3200 кВч/мес'
-  },
-  {
-    id: 4,
-    street: 'ул. Красная, 1488',
-    risk: 23,
-    pattern: 'Майнинг',
-    exceed: '300 кВч/мес'
-  }
-];
 
-const RiskTable = () => {
+
+const RiskTable = observer(({data}) => {
+  const isDark = themeStore.mode === 'dark';
+  const navigate = useNavigate();
+
+  const handleClick = (row) => {
+      const feature = {
+    id: row.id,
+    properties: {
+      address: row.address,
+      risk: row.properties.risk,
+      pattern: row.properties.pattern,
+      exceed: row.properties.exceed
+    },
+    geometry: {
+      type: 'Point',
+      coordinates: row.coordinates,
+    },
+  };
+
+  mapStore.setSelectedFeature(feature);
+  mapStore.center = [row.coordinates[1], row.coordinates[0]];
+  mapStore.zoom = 18;
+
+  navigate('/map'); // редирект на карту
+};
+
+
+  console.log(data);
+
+// В RiskTable.js
+  const sortedData = [...(data || [])].sort((a, b) => b.properties.risk - a.properties.risk);
+
+
+
   return (
     <TableContainer sx={{ backgroundColor: 'transparent' }}>
       <Table>
         <TableHead>
-          <TableRow sx={{
-                '& th': { borderBottom: 'none' } // 🔥 убирает разделители между строками
-            }}>
-            <TableCell sx={{ color: '#aaa' }}>№</TableCell>
-            <TableCell sx={{ color: '#aaa' }}>УЛИЦА</TableCell>
-            <TableCell sx={{ color: '#aaa' }}>РИСК</TableCell>
-            <TableCell sx={{ color: '#aaa' }}>ПАТТЕРН</TableCell>
-            <TableCell sx={{ color: '#aaa' }}>ПОТРЕБЛЕНИЕ</TableCell>
+          <TableRow
+            sx={{
+              '& th': { borderBottom: 'none' }
+            }}
+          >
+            <TableCell sx={{ color: isDark ? '#aaa' : '#333' }}>№</TableCell>
+            <TableCell sx={{ color: isDark ? '#aaa' : '#333' }}>УЛИЦА</TableCell>
+            <TableCell sx={{ color: isDark ? '#aaa' : '#333' }}>РИСК</TableCell>
+            <TableCell sx={{ color: isDark ? '#aaa' : '#333' }}>ПАТТЕРН</TableCell>
+            <TableCell sx={{ color: isDark ? '#aaa' : '#333' }}>ПОТРЕБЛЕНИЕ</TableCell>
             <TableCell />
           </TableRow>
         </TableHead>
         <TableBody>
-          {data.map((row) => (
-            <TableRow key={data.id} sx={{'& td': { borderBottom: 'none'}, width: '15.63vw'}}>
-                <TableCell colSpan={6} sx={{ padding: 0 , width: '15.63vw'}}>
-                    <Box
+          {sortedData?.map((row, index) => (
+            <TableRow key={row.id} sx={{ '& td': { borderBottom: 'none' }, width: '15.63vw' }}>
+              <TableCell colSpan={6} sx={{ padding: 0, width: '15.63vw' }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    borderRadius: '18px',
+                    bgcolor: isDark ? '#252736' : '#f0f0f0',
+                    padding: 2,
+                    mb: 1,
+                    width: '74.48vw'
+                  }}
+                >
+                  <Typography sx={{ color: isDark ? '#fff' : '#000', width: '1%' }}>{index+1}</Typography>
+                  <Typography sx={{ color: isDark ? '#fff' : '#000', width: '23%' }}>{row.address}</Typography>
+                  <Typography sx={{ color: getRiskColor(row.properties.risk), fontWeight: 600, width: '14%' }}>
+                    {row.properties.risk}%
+                  </Typography>
+                  <Typography sx={{ color: isDark ? '#fff' : '#000', width: '19.5%' }}>{row.properties.pattern}</Typography>
+                  <Typography sx={{ color: isDark ? '#fff' : '#000', width: '20%' }}>{row.properties.exceed}</Typography>
+                  <Button
+                    variant="contained"
+                    size="small"
                     sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        borderRadius: '18px',
-                        bgcolor: '#252736',
-                        padding: 2,
-                        mb: 1, width: '74.48vw'
+                      backgroundColor: isDark ? '#3B445C' : '#C5CAE9',
+                      color: isDark ? '#fff' : '#000',
+                      textTransform: 'none'
                     }}
-                    >
-                    <Typography sx={{ color: '#fff', width: '1%' }}>{row.id}</Typography>
-                    <Typography sx={{ color: '#fff', width: '24%' }}>{row.street}</Typography>
-                    <Typography sx={{ color: getRiskColor(row.risk), fontWeight: 600, width: '14%' }}>
-                        {row.risk}%
-                    </Typography>
-                    <Typography sx={{ color: '#fff', width: '19.5%' }}>{row.pattern}</Typography>
-                    <Typography sx={{ color: '#fff', width: '22.5%' }}>{row.exceed}</Typography>
-                    <Button variant="contained" size="small" sx={{ backgroundColor: '#3B445C' }} color='white'>
-                        подробнее
-                    </Button>
-                    </Box>
-                </TableCell>
+                    onClick={() => handleClick(row)}
+                  >
+                    подробнее
+                  </Button>
+                </Box>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
     </TableContainer>
   );
-};
+});
 
 export default RiskTable;

@@ -5,10 +5,16 @@ import { observer } from 'mobx-react-lite';
 import mapStore from '../../stores/MapStore';
 import { fetchAutocompleteResults } from '../../services/api';
 
-const AutocompleteSearch = observer(({ defaultValue = '' }) => {
+import themeStore from '../../stores/ThemeStore';
+
+import { useNavigate } from 'react-router-dom';
+
+
+const AutocompleteSearch = observer(({ defaultValue = '', onHeader}) => {
   const [inputValue, setInputValue] = useState(defaultValue);
   const [selectedValue, setSelectedValue] = useState(null);
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (defaultValue) {
@@ -25,28 +31,45 @@ const AutocompleteSearch = observer(({ defaultValue = '' }) => {
   });
 
   const handleSelect = (event, value) => {
-    if (!value) return;
+  if (!value) return;
 
-    setSelectedValue(value);
-    setInputValue(value.address);
-    setOpen(false); // закрыть после выбора
+  setSelectedValue(value);
+  setInputValue(value.address);
+  setOpen(false);
 
-    mapStore.setSelectedFeature({
-      id: value.id,
-      properties: { address: value.address },
-      geometry: {
-        type: 'Point',
-        coordinates: value.coordinates,
-      },
-    });
+  const feature = {
+    id: value.id,
+    properties: {
+      address: value.address,
+      risk: value?.properties?.risk,
+      pattern: value?.properties?.pattern,
+      exceed: value?.properties?.exceed
+    },
+    geometry: {
+      type: 'Point',
+      coordinates: value.coordinates,
 
-    if (mapStore.mapInstance) {
-      mapStore.mapInstance.flyTo([value.coordinates[1], value.coordinates[0]], 18, {
-        animate: true,
-        duration: 1,
-      });
-    }
+    },
   };
+
+  mapStore.setSelectedFeature(feature);
+  mapStore.center = [value.coordinates[1], value.coordinates[0]];
+  mapStore.zoom = 18;
+
+  if (onHeader) {
+    navigate('/map'); // редирект на карту
+    return; // остановить выполнение — точку отрисует карта по selectedFeature
+  }
+
+  // иначе — применяем flyTo сразу
+  if (mapStore.mapInstance) {
+    mapStore.mapInstance.flyTo([value.coordinates[1], value.coordinates[0]], 18, {
+      animate: true,
+      duration: 1,
+    });
+  }
+};
+
 
   return (
     <Autocomplete
@@ -71,27 +94,27 @@ const AutocompleteSearch = observer(({ defaultValue = '' }) => {
           size="small"
           variant="outlined"
           sx={{
-            width: '280px',
-            input: { color: 'white' },
-            '& .MuiOutlinedInput-root': {
-              '& fieldset': {
-                borderColor: 'rgba(255, 255, 255, 0.23)',
-                borderRadius: '10px',
-              },
-              '&:hover fieldset': {
-                borderColor: 'white',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: 'white',
-              },
-            },
-            '& .MuiInputLabel-root': {
-              color: 'white',
-            },
-            '& .MuiInputLabel-root.Mui-focused': {
-              color: 'white',
-            },
-          }}
+                width: '320px',
+                input: { color: themeStore.mode === 'dark' ? 'white' : 'rgba(37, 39, 54, 0.55)' },
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: themeStore.mode === 'dark' ? 'rgba(255, 255, 255, 0.23)' : 'rgba(37, 39, 54, 0.55)',
+                    borderRadius: '10px',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: themeStore.mode === 'dark' ? 'white' : 'rgba(37, 39, 54, 0.55)',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: themeStore.mode === 'dark' ? 'white' : 'rgba(37, 39, 54, 0.55)',
+                  },
+                },
+                '& .MuiInputLabel-root': {
+                  color: themeStore.mode === 'dark' ? 'white' : 'rgba(37, 39, 54, 0.55)',
+                },
+                '& .MuiInputLabel-root.Mui-focused': {
+                  color: themeStore.mode === 'dark' ? 'white' : 'rgba(37, 39, 54, 0.55)',
+                },
+              }}
           InputProps={{
             ...params.InputProps,
             endAdornment: (

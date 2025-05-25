@@ -68,7 +68,7 @@ const MapHeader = observer(() => {
         position="static"
         sx={{
           boxShadow: 'none',
-          backgroundColor: '#252736',
+          backgroundColor: themeStore.mode === 'dark' ? '#252736' : '#FFF',
           px: 2,
           py: 0,
           borderRadius: '15px',
@@ -92,11 +92,20 @@ const MapHeader = observer(() => {
                 width: 40,
                 height: 40,
                 borderRadius: 3,
-                border: '1px solid rgba(255, 255, 255, 0.23)',
-                color: 'white',
+                border: `1px solid ${
+                  themeStore.mode === 'dark'
+                    ? 'rgba(255, 255, 255, 0.23)'
+                    : 'rgba(37, 39, 54, 0.55)'
+                }`,
+                color:
+                  themeStore.mode === 'dark'
+                    ? 'white'
+                    : 'rgba(37, 39, 54, 0.55)',
                 '&:hover': {
-                  border: '1px solid white',
-                  background: 'none'
+                  border: `1px solid ${
+                    themeStore.mode === 'dark' ? 'white' : 'black'
+                  }`,
+                  background: 'none',
                 },
               }}
             >
@@ -105,12 +114,9 @@ const MapHeader = observer(() => {
           </Box>
 
           {/* Правая часть: уведомления и настройки */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <IconButton sx={{ color: 'white' }}>
-                <SettingsIcon />
-              </IconButton>
-              <IconButton sx={{ color: 'white' }}>
+              <IconButton color = {themeStore.mode === 'dark' ? 'white' : '#222749'} >
                 <NotificationsIcon />
               </IconButton>
             </Box>
@@ -132,7 +138,7 @@ const MapHeader = observer(() => {
               <Avatar />
               <Box>
                 <Typography variant="body2" sx={{ color: 'gray' }}>
-                  Имя пользователя
+                  Ульяна Аллаярова
                 </Typography>
                 <Typography variant="caption" sx={{ color: 'gray' }}>
                   jdoe@acme.com
@@ -153,9 +159,9 @@ const MapHeader = observer(() => {
                 PaperProps={{
                   ref: menuRef,
                   sx: {
-                    backgroundColor: '#252736 !important',
+                    background: themeStore.mode === 'dark' ? '#252736' : '#FFF',
                     width: '300px',
-                    color: 'white',
+                    color: themeStore.mode === 'dark' ? '#FFF' : '#252736',
                     borderTopLeftRadius: 0,
                     borderTopRightRadius: 0,
                     borderBottomLeftRadius: '20px',

@@ -19,18 +19,21 @@ import MapIcon from '../../assets/map_icon.svg?react';
 import MetrixIcon from '../../assets/metrix_icon.svg?react';
 import ProfileIcon from '../../assets/user_icon.svg?react';
 import SideItem from "../SideItem/SideItem";
+import ReportIcon from '../../assets/report.svg?react';
 
 import MainIconBlack from '../../assets/obj_icon_blk.svg?react';
 import ObjectsIconBlack from '../../assets/obj_icon_blk.svg?react';
 import MapIconBlack from '../../assets/obj_icon_blk.svg?react';
 import MetrixIconBlack from '../../assets/metrix_icon_blk.svg?react';
-import ProfileIconBlack from '../../assets/user_icon_blk.svg?react'
+import ProfileIconBlack from '../../assets/user_icon_blk.svg?react';
+import ReportIconBlack from '../../assets/report_blk.svg?react';
 
 import MainIconActive from '../../assets/home_icon_active.svg?react';
 import ObjectsIconActive from '../../assets/obj_icon_active.svg?react';
 import MetrixIconActive from '../../assets/metrix_icon_active.svg?react';
 import ProfileIconActive from '../../assets/user_icon_active.svg?react';
 import MapIconActive from '../../assets/map_icon.svg?react';
+import ReportIconActive from '../../assets/report_active.svg?react';
 
 import { observer } from 'mobx-react-lite';
 import themeStore from '../../stores/ThemeStore';
@@ -51,6 +54,7 @@ const Sidebar = observer(() => {
   { to: '/map', icon: themeStore.mode === 'dark' ? <MapIcon /> : <MapIconBlack />, a_icon:  <MapIconActive />, text: 'Карта' },
   { to: '/metrics', icon: themeStore.mode === 'dark' ? <MetrixIcon /> : <MetrixIconBlack />, a_icon: <MetrixIconActive />, text: 'Панель метрик' },
   { to: '/profile', icon: themeStore.mode === 'dark' ? <ProfileIcon /> : <ProfileIconBlack />, a_icon: <ProfileIconActive />, text: 'Профиль' },
+  { to: '/reports', icon: themeStore.mode === 'dark' ? <ReportIcon /> : <ReportIconBlack />, a_icon: <ReportIconActive />, text: 'Отчеты' },
 ];
 
   const handleClick = (event) => {
@@ -143,7 +147,7 @@ const Sidebar = observer(() => {
         <Avatar />
         <Box>
           <Typography variant="body2" sx={{ color: 'gray' }}>
-            Имя пользователя
+            Ульяна Аллаярова
           </Typography>
           <Typography variant="caption" sx={{ color: 'gray' }}>
             jdoe@acme.com
@@ -162,9 +166,9 @@ const Sidebar = observer(() => {
         PaperProps={{
           ref: menuRef,
           sx: {
-            backgroundColor: '#252736 !important',
+            background: themeStore.mode === 'dark' ? '#252736' : '#FFF',
             width: '263px',
-            color: 'white',
+            color: themeStore.mode === 'dark' ? '#FFF' : '#252736',
             borderTopLeftRadius: '20px',
             borderTopRightRadius: '20px',
             borderBottomLeftRadius: 0,
@@ -173,7 +177,7 @@ const Sidebar = observer(() => {
           },
         }}
       >
-        <MenuItem onClick={() => themeStore.toggleTheme()}>Тема</MenuItem>
+        <MenuItem onClick={() => {themeStore.toggleTheme(), setAnchorEl((prev) => (prev ? null : event.currentTarget));}}>Тема</MenuItem>
         <MenuItem onClick={() => console.log('Выход')}>Выйти</MenuItem>
       </Menu>
     </Drawer>

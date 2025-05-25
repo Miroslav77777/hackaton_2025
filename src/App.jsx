@@ -5,6 +5,7 @@ import Login from './pages/Login/Login';
 import Incidents from "./pages/Incidents/Incidents";
 import Profile from "./pages/Profile/Profile";
 import Metrix from "./pages/Metrix/Metrix";
+import Reports from "./pages/Reports/Reports";
 
 const App = () => {
   return(
@@ -16,6 +17,7 @@ const App = () => {
         <Route path="/incidents" element={<Incidents />} />
         <Route path="/metrics" element={<Metrix />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/reports" element={<Reports />} />
       </Routes>
     </BrowserRouter>
   )

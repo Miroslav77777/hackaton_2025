@@ -1,0 +1,35 @@
+.logo_wrapper{
+    display: flex;
+    width: 100%;
+    height: fit-content;
+    align-items: center;
+    justify-content: center;
+    /* margin-top: 40px;
+    margin-bottom: 60px; */
+    cursor: pointer;
+}
+
+.text_g, .text_w, .text_wb{
+    color: #5ED05E;
+    font-feature-settings: 'liga' off, 'clig' off;
+    font-family: Manrope;
+    font-size: 26.041px;
+    font-style: normal;
+    font-weight: 800;
+    line-height: 150%; /* 48.828px */
+    letter-spacing: 0.305px;
+    width: fit-content;
+    margin: 0;
+}
+
+.text_w{
+    color: #FFF;
+}
+
+.text_wb{
+    color: black;
+}
+
+.lightning{
+    fill: #5ED05E;
+}

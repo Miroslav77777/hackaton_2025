@@ -1,0 +1,84 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+
+
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: light dark;
+  
+
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  height: fit-content !important;
+  width: 100% !important;
+  min-height: 100%;
+  flex: 1;
+  
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+
+
+#map{
+  width: 70%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.leaflet-control-attribution, .leaflet-control{
+  display: none;
+}
+
+.leaflet-container{
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
+
+.house-number-tooltip {
+  background-color: transparent !important;
+  border: none !important;
+  color: white !important;
+  font-weight: bold !important;
+  font-size: 14px !important;
+  text-shadow: 1px 1px 2px black !important;
+  pointer-events: none;
+  width: fit-content;
+  height: fit-content;
+  padding: 0;
+  box-shadow: none;
+}

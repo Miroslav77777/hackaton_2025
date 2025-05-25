@@ -1,5 +1,8 @@
 import { Box, Typography } from '@mui/material';
 
+import { observer } from 'mobx-react-lite';
+import themeStore from '../../stores/ThemeStore';
+
 const funnelData = [
   { label: 'Тревоги', value: 48 },
   { label: 'Выезды', value: 35 },
@@ -7,16 +10,16 @@ const funnelData = [
   { label: 'Акты', value: 19 },
 ];
 
-const Status = () => {
+const Status = observer(() => {
   return (
     <Box
       sx={{
         width: '23.15vw',
         height: '480px',
         borderRadius: '12px',
-        background: 'linear-gradient(180deg, #222648 0%, #252736 100%)',
+        background: themeStore.mode === 'dark' ? 'linear-gradient(180deg, #222648 0%, #252736 100%)' : 'linear-gradient(180deg, #FFF 0%, #F0F2FF 100%)',
         padding: '18px 25px',
-        color: 'white',
+        color: themeStore.mode === 'dark' ? 'white' : '#252736',
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -75,7 +78,7 @@ const Status = () => {
           >
             <Box
               sx={{
-                background: '#E8EAF6',
+                background: themeStore.mode === 'dark' ? '#E8EAF6' : '#016EE9',
                 borderRadius: '8px',
                 padding: '8px 16px',
                 minWidth: '64px',
@@ -87,7 +90,7 @@ const Status = () => {
                 sx={{
                   fontWeight: 700,
                   fontSize: '20px',
-                  color: '#0051FF',
+                  color: themeStore.mode === 'dark' ? '#0051FF' : 'white',
                 }}
               >
                 {item.value}
@@ -97,7 +100,7 @@ const Status = () => {
               sx={{
                 fontSize: '18px',
                 fontWeight: 500,
-                color: '#fff',
+                color: themeStore.mode === 'dark' ? 'white' : '#252736',
               }}
             >
               {item.label}
@@ -107,6 +110,6 @@ const Status = () => {
       </Box>
     </Box>
   );
-};
+});
 
 export default Status;

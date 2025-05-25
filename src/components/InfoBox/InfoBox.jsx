@@ -1,6 +1,6 @@
 import { Typography, Box } from '@mui/material';
 
-const InfoBox = ({name, value, background, width, icon}) => {
+const InfoBox = ({name, value, background, width, icon, hc='rgba(255, 255, 255, 0.60)', vc='#FFF'}) => {
     return(
         <Box sx={{
             display: 'flex',
@@ -9,7 +9,7 @@ const InfoBox = ({name, value, background, width, icon}) => {
             background: `${background}`,
             flexDirection: 'column',
             borderRadius: '15px',
-            gap: '7px'
+            justifyContent: 'space-between'
         }}
         px={3} py={3}
         >
@@ -19,9 +19,9 @@ const InfoBox = ({name, value, background, width, icon}) => {
                 justifyContent: 'space-between'
             }}>
                 <Typography sx={{
-                    color: 'rgba(255, 255, 255, 0.60)',
+                    color: hc,
                     fontFamily: 'Manrope',
-                    fontSize: '16px',
+                    fontSize: '0.83vw',
                     fontWeight: 500,
                     lineHeight: '150%', /* 24px */
                     width: '74%'
@@ -32,9 +32,9 @@ const InfoBox = ({name, value, background, width, icon}) => {
             </Box>
             <Box>
                 <Typography sx={{
-                    color: '#FFF',
+                    color: vc,
                     fontFamily: 'Manrope',
-                    fontSize: '40px',
+                    fontSize: '2.08vw',
                     fontWeight: '700',
                     lineHeight: '150%', /* 60px */
                 }}>

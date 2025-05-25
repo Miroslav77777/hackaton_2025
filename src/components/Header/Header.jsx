@@ -16,13 +16,21 @@ import { useState, useEffect, useRef } from "react";
 
 import { observer } from 'mobx-react-lite';
 import themeStore from '../../stores/ThemeStore';
+import AutocompleteSearch from "../AutocompleteSearch/AutocompleteSearch";
+
+import { getReports } from '../../services/api';
+
+
 
 
 
 const Header = observer(() => {
+  const [showHeader, setShowHeader] = useState(true);
+  const lastScrollY = useRef(0);
   const [anchorEl, setAnchorEl] = useState(null);
   const avatarRef = useRef(null);
   const menuRef = useRef(null);
+  const [hasNewReports, setHasNewReports] = useState(false);
 
 
   const handleClick = (event) => {
@@ -32,6 +40,33 @@ const Header = observer(() => {
   const handleClose = () => {
     setAnchorEl(null);
   };
+
+  useEffect(() => {
+  const fetchAndCompareReports = async () => {
+    try {
+      const latest = await getReports();
+
+      const prevRaw = localStorage.getItem('latest_reports');
+      const prev = prevRaw ? JSON.parse(prevRaw) : [];
+
+      const prevIds = new Set(prev.map(r => r.id));
+      const newIds = new Set(latest.map(r => r.id));
+
+      const hasNew = latest.some(r => !prevIds.has(r.id));
+      setHasNewReports(hasNew);
+
+      localStorage.setItem('latest_reports', JSON.stringify(latest));
+    } catch (err) {
+      console.error('Ошибка при загрузке отчётов:', err);
+    }
+  };
+
+  fetchAndCompareReports(); // первый вызов сразу
+  const interval = setInterval(fetchAndCompareReports, 10000); // каждые 10 сек
+
+  return () => clearInterval(interval);
+}, []);
+
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -51,21 +86,40 @@ const Header = observer(() => {
     };
   }, []);
 
+  useEffect(() => {
+  const handleScroll = () => {
+    const currentScrollY = window.scrollY;
+
+    if (currentScrollY > lastScrollY.current && currentScrollY > 50) {
+      setShowHeader(false); // скролл вниз — скрыть
+    } else {
+      setShowHeader(true); // скролл вверх — показать
+    }
+
+    lastScrollY.current = currentScrollY;
+  };
+
+  window.addEventListener("scroll", handleScroll);
+  return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
 
 
   return (
-    <Box sx={{ 
-      position: 'fixed',
-      top: '19px',
-      
-      left: '20.16vw',
-      width: '75vw',
-      borderRadius: '15px',
-      overflow: 'hidden', // важно для скруглений
-      zIndex: (theme) => theme.zIndex.drawer + 1,
-      boxShadow: 'none'
-      
-    }}>
+    <Box
+      sx={{
+        position: 'fixed',
+        top: showHeader ? '19px' : '-100px', // уходит вверх
+        left: '20.16vw',
+        width: '75vw',
+        borderRadius: '15px',
+        overflow: 'hidden',
+        zIndex: (theme) => theme.zIndex.drawer + 1,
+        boxShadow: 'none',
+        transition: 'top 0.3s ease-in-out', // плавное появление/скрытие
+      }}
+    >
+
       <AppBar
         position="static"
         sx={{
@@ -87,7 +141,7 @@ const Header = observer(() => {
         >
           {/* Левая часть: поле поиска и кнопка */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <TextField
+            {/* <TextField
               id="outlined-basic"
               label="Поиск адреса"
               variant="outlined"
@@ -114,8 +168,9 @@ const Header = observer(() => {
                   color: themeStore.mode === 'dark' ? 'white' : 'rgba(37, 39, 54, 0.55)',
                 },
               }}
-            />
-            <IconButton
+            /> */}
+            <AutocompleteSearch onHeader={true}/>
+            {/* <IconButton
               sx={{
                 width: 40,
                 height: 40,
@@ -138,15 +193,29 @@ const Header = observer(() => {
               }}
             >
               <SearchIcon />
-            </IconButton>
+            </IconButton> */}
           </Box>
 
           {/* Правая часть: уведомления и настройки */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <IconButton sx={{ color: 'white' }}>
-                <NotificationsIcon />
-              </IconButton>
+              <IconButton sx={{ position: 'relative', color: themeStore.mode === 'dark' ? 'white' : '#222749' }}>
+  <NotificationsIcon />
+  {hasNewReports && (
+    <Box
+      sx={{
+        position: 'absolute',
+        top: 6,
+        right: 6,
+        width: 10,
+        height: 10,
+        borderRadius: '50%',
+        backgroundColor: '#f44336', // красная точка
+      }}
+    />
+  )}
+</IconButton>
+
             </Box>
             <Box
               ref={avatarRef}
@@ -166,7 +235,7 @@ const Header = observer(() => {
               <Avatar />
               <Box>
                 <Typography variant="body2" sx={{ color: 'gray' }}>
-                  Имя Фамилия
+                  Ульяна Аллаярова
                 </Typography>
                 <Typography variant="caption" sx={{ color: 'gray' }}>
                   jdoe@acme.com
@@ -182,14 +251,15 @@ const Header = observer(() => {
                 sx={{
                   position: 'absolute',
                   left: '30px',
-                  top: '-4px'
+                  top: '-4px',
+                  
                 }}
                 PaperProps={{
                   ref: menuRef,
                   sx: {
-                    backgroundColor: '#252736 !important',
+                    background: themeStore.mode === 'dark' ? '#252736' : '#FFF',
                     width: '300px',
-                    color: 'white',
+                    color: themeStore.mode === 'dark' ? '#FFF' : '#252736',
                     borderTopLeftRadius: 0,
                     borderTopRightRadius: 0,
                     borderBottomLeftRadius: '20px',

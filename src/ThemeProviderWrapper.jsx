@@ -23,7 +23,7 @@ const ThemeProviderWrapper = observer(({ children }) => {
               paper: '#f9f9f9',
             },
             text: {
-              primary: '#000000',
+              primary: '#252736',
             },
           }),
     },

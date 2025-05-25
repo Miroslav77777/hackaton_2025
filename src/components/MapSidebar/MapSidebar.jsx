@@ -18,11 +18,23 @@ import { useRef, useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import mapStore from '../../stores/MapStore';
+import themeStore from '../../stores/ThemeStore';
 
 
+import { useQuery } from '@tanstack/react-query';
+import { fetchRiskAddresses, sendReport } from '../../services/api';
+import { Button } from '@mui/material';
 
 
 const MapSidebar = observer(() => {
+
+  const { data, isError } = useQuery({
+        queryKey: ['ordered-buildings', 5], // можно менять 10 на проп
+        queryFn: () => fetchRiskAddresses(5),
+        staleTime: 1000 * 60, // 1 минута
+    });
+
+    if (isError) return <div>Ошибка загрузки</div>;
 
     const feature = mapStore.getSelectedFeature;
 
@@ -36,6 +48,20 @@ const MapSidebar = observer(() => {
     
       const handleClose = () => {
         setAnchorEl(null);
+      };
+
+      const handleSendReport = async () => {
+        if (!feature) return;
+
+        const id = feature.id.split('/')[1]; // ← это ты хотел
+        const addr = feature.properties.address;
+
+        try {
+          const result = await sendReport(id, addr);
+          console.log('✅ Успешно отправлено:', result);
+        } catch (err) {
+          console.error('❌ Ошибка при отправке:', err);
+        }
       };
     
       // Закрытие при клике вне меню
@@ -67,7 +93,10 @@ const MapSidebar = observer(() => {
                 '& .MuiDrawer-paper': {
                 width: '400px',
                 boxSizing: 'border-box',
-                background: 'linear-gradient(180deg, #252736 0%, #252736 100%)',
+               background:
+                themeStore.mode === 'dark'
+                ? 'linear-gradient(180deg, #252736 0%, #252736 100%)'
+                : 'linear-gradient(180deg, #FFF 0.01%, #F0FFF5 95.89%)',
                 color: '#fff',
                 borderRadius: '15px',
                 height: 'calc(100vh - 38px)',
@@ -138,10 +167,11 @@ const MapSidebar = observer(() => {
                 <Box display={'flex'} alignItems={'flex-start'} width={'360px'} marginTop={5}>
                     <Typography sx={{
                                 
-                                color: '#FFF',
+                                color: themeStore.mode === 'dark' ? '#FFF' : '#252736',
                                 fontFamily: 'Manrope',
                                 fontSize: '25px',
                                 fontWeight: '500',
+                                height: '50px',
                                 lineHeight: '150%' /* 60px */
                             }}>
                         {
@@ -155,7 +185,8 @@ const MapSidebar = observer(() => {
                         }
                     </Typography>
                 </Box>
-                {feature && !feature.properties['building:flats'] || feature?.properties.address ? <MapSidebarBlocks /> : <IncedList data={['ул. Селезнёва, 210', 'ул. Таманская, 153к2 ', 'ул. Ставропольская, 80', 'ул. Красная, 1488', 'ул. им. Тургенева, 143', 'ул. Селезнёва, 210']} pizdata={['Подозрение', 'Подозрение', 'Подозрение', 'Подозрение', 'Подозрение']} width={'360px'} marginTop={3} withbutton={false} />}
+                {feature && !feature.properties['building:flats'] || feature?.properties.address ? feature.properties.risk ? <><MapSidebarBlocks /> <Button variant="contained" sx={{ mt: 2, backgroundColor: '#007BFF', color: '#fff', width:'359px', borderRadius: '15px' }} onClick={handleSendReport}>ОТПРАВИТЬ БРИГАДУ
+      </Button></> : <MapSidebarBlocks />  : <IncedList data={data} pizdata={['Подозрение', 'Подозрение', 'Подозрение', 'Подозрение', 'Подозрение']} width={'360px'} marginTop={7} backcolor={themeStore.mode === 'dark' ? '#362525' : '#FFF7FA'} withbutton={false} />}
             </Box>
 
             {/* Низ — профиль */}
@@ -175,7 +206,7 @@ const MapSidebar = observer(() => {
         <Avatar />
         <Box>
           <Typography variant="body2" sx={{ color: 'gray' }}>
-            Имя пользователя
+            Ульяна Аллаярова
           </Typography>
           <Typography variant="caption" sx={{ color: 'gray' }}>
             jdoe@acme.com
@@ -194,9 +225,9 @@ const MapSidebar = observer(() => {
         PaperProps={{
           ref: menuRef,
           sx: {
-            backgroundColor: '#252736 !important',
+            background: themeStore.mode === 'dark' ? '#252736' : '#FFF',
             width: '400px',
-            color: 'white',
+            color: themeStore.mode === 'dark' ? '#FFF' : '#252736',
             borderTopLeftRadius: '20px',
             borderTopRightRadius: '20px',
             borderBottomLeftRadius: 0,
@@ -205,7 +236,7 @@ const MapSidebar = observer(() => {
           },
         }}
       >
-        <MenuItem onClick={() => console.log('Сменить тему')}>Тема</MenuItem>
+        <MenuItem onClick={() => {themeStore.toggleTheme(), setAnchorEl((prev) => (prev ? null : event.currentTarget));}}>Тема</MenuItem>
         <MenuItem onClick={() => console.log('Выход')}>Выйти</MenuItem>
       </Menu>
 

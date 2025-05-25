@@ -7,7 +7,19 @@ import IncedList from "../../components/IncedList/IncedList";
 import User from '../../assets/user_prof.svg?react'
 import DateTime from "../../components/DateTime/DateTime";
 
-const Profile = () => {
+import { observer } from "mobx-react-lite";
+import themeStore from "../../stores/ThemeStore";
+
+
+
+const Profile = observer(() => {
+  const data = [
+  { address: 'ул. Селезнёва, 210' },
+  { address: 'ул. Таманская, 153к2' },
+  { address: 'ул. Ставропольская, 80' },
+  { address: 'ул. Красная, 1488' },
+  { address: 'ул. им. Тургенева, 143' }
+];
   return (
     <Layout>
       <BreadcrumbsNav />
@@ -15,7 +27,7 @@ const Profile = () => {
         <Box display="flex" flexDirection="column">
           <Typography
             sx={{
-              color: 'var(--text-primary, #FFF)',
+              color: themeStore.mode === 'dark' ? 'var(--text-primary, var(--text-primary, #FFF))' : 'var(--text-primary, rgba(0, 0, 0, 0.87))',
               fontFamily: 'Manrope',
               fontSize: '34px',
               fontWeight: 500,
@@ -31,7 +43,7 @@ const Profile = () => {
             width: '25.26vw',
             height: '209px',
             borderRadius: '15px',
-            background: 'linear-gradient(180deg, #222749 0%, #252736 100%)',
+            background: themeStore.mode === 'dark' ? 'linear-gradient(180deg, #222749 0%, #252736 100%)' : 'linear-gradient(180deg, #FFF 0%, #F0F2FF 100%)',
             justifyContent: 'space-between'
           }} alignItems={'center'} px={3}>
             <Box sx={{
@@ -40,18 +52,18 @@ const Profile = () => {
                 alignItems: 'self-start'
             }}>
                 <Typography sx={{
-                    color: 'var(--text-primary, #FFF)',
+                    color: themeStore.mode === 'dark' ? 'var(--text-primary, var(--text-primary, #FFF))' : 'var(--text-primary, rgba(0, 0, 0, 0.87))',
                     fontFamily: 'Manrope',
                     fontSize: '28px',
                     fontWeight: 500,
                     margin: '0'
                 }}>
-                    <p style={{margin: 0}}>Имя</p>
-                    <p style={{margin: 0}}>Фамилия</p>
-                    <p style={{margin: 0}}>Отчество</p>
+                    <p style={{margin: 0}}>Аллаярова</p>
+                    <p style={{margin: 0}}>Ульяна</p>
+                    <p style={{margin: 0}}>Сергеевна</p>
                 </Typography>
                 <Typography sx={{
-                    color: 'rgba(255, 255, 255, 0.60)',
+                    color: themeStore.mode === 'dark' ? 'rgba(255, 255, 255, 0.60)' : 'var(--text-primary, rgba(0, 0, 0, 0.87))',
                     fontFamily: 'Manrope',
                     fontSize: '20px',
                     fontWeight: 500,
@@ -73,7 +85,7 @@ const Profile = () => {
 
           <Typography
             sx={{
-              color: 'var(--text-primary, #FFF)',
+              color: themeStore.mode === 'dark' ? 'var(--text-primary, var(--text-primary, #FFF))' : 'var(--text-primary, rgba(0, 0, 0, 0.87))',
               fontFamily: 'Manrope',
               fontSize: '28px',
               fontWeight: 300,
@@ -91,7 +103,7 @@ const Profile = () => {
                 <InfoBox name={'Конверсия подтверждение'} value={'70%'} width={'14.48vw'} background={'linear-gradient(180deg, #0177FC 0%, #014796 100%)'}/>
             </Box>
             <Box display={'flex'} gap={'1.25vw'}>
-                <InfoBox name={'KPI выполнен на:'} value={4} width={'14.48vw'} background={'linear-gradient(180deg, #222749 0%, #252736 100%)'}/>
+                <InfoBox name={'KPI выполнен на:'} value={4} width={'14.48vw'} background={themeStore.mode === 'dark' ? 'linear-gradient(180deg, #222749 0%, #252736 100%)' : 'linear-gradient(180deg, #FEFEFF 0%, #F0F1FF 100%)'} hc={themeStore.mode === 'dark' ? 'rgba(255, 255, 255, 0.60)' : 'var(--text-primary, rgba(0, 0, 0, 0.87))'} vc={themeStore.mode === 'dark' ? '#fff' : 'var(--text-primary, rgba(0, 0, 0, 0.87))'}/>
             </Box>
           </Box>
 
@@ -100,7 +112,7 @@ const Profile = () => {
         <Box display={'flex'} flexDirection={'column'}>
             <Typography sx={{
                 marginTop: 2,
-                color: '#FFF',
+                color: themeStore.mode === 'dark' ? '#fff' : 'var(--text-primary, rgba(0, 0, 0, 0.87))',
                 fontFamily: 'Manrope',
                 fontSize: '25px',
                 fontWeight: '500',
@@ -109,12 +121,12 @@ const Profile = () => {
             }}>
                 Список обработанных инцидентов
             </Typography>
-            <IncedList data={['ул. Селезнёва, 210', 'ул. Таманская, 153к2 ', 'ул. Ставропольская, 80', 'ул. Красная, 1488', 'ул. им. Тургенева, 143 ']} pizdata={['23 мая 0:05 - Майнинг (Риск 89%)', '22 мая 4:05 - Майнинг (Риск 90%) ', '22 мая 4:00 - Теплица (Риск 39%)', '22 мая 0:05 - Дата Центр (Риск 70%)', '22 мая 0:05 - Дата Центр (Риск 70%)']} width={'20vw'} marginTop={1} withbutton={true} backcolor={'#252836'} brcolor={'#29B6F6'} link="/worked"/>
+            <IncedList data={data} pizdata={['23 мая 0:05 - Майнинг (Риск 89%)', '22 мая 4:05 - Майнинг (Риск 90%) ', '22 мая 4:00 - Теплица (Риск 39%)', '22 мая 0:05 - Дата Центр (Риск 70%)', '22 мая 0:05 - Дата Центр (Риск 70%)']} width={'20vw'} marginTop={1} withbutton={true} backcolor={themeStore.mode === 'dark' ? '#252836' : '#FDFDFF'} brcolor={'#29B6F6'} link="/reports"/>
             <DateTime margTop={2}/>
         </Box>
       </Box>
     </Layout>
   );
-};
+});
 
 export default Profile;

@@ -3,6 +3,8 @@ import { Box, Typography, Link } from '@mui/material';
 import Attention from '../../assets/attention.svg?react';
 import Blue from '../../assets/InfoOutlined.svg?react'
 import { Link as RouterLink } from 'react-router-dom'; // если используешь react-router
+import themeStore from '../../stores/ThemeStore';
+import mapStore from '../../stores/MapStore';
 
 const IncedList = ({ data, pizdata, width, marginTop, withbutton, brcolor = '#F44336', backcolor = '#362525', link='/incidents'}) => {
   if (!Array.isArray(data) || data.length === 0) {
@@ -26,7 +28,7 @@ const IncedList = ({ data, pizdata, width, marginTop, withbutton, brcolor = '#F4
           {brcolor === '#29B6F6' ? <Blue style={{ width: 24, height: 24}}/> :<Attention style={{ width: 24, height: 24}} />}
           <Box display={'flex'} flexDirection={'column'} gap={1}>
             <Typography variant="p" color="text.primary">
-              {item}
+              {item.address}
             </Typography>
             <Typography variant="body2" color="text.primary" fontSize={'14px'}>
               {pizdata[index]}
@@ -42,7 +44,7 @@ const IncedList = ({ data, pizdata, width, marginTop, withbutton, brcolor = '#F4
             underline="none"
             fontWeight={600}
             textTransform={'uppercase'}
-            color='white'
+            color= {themeStore.mode==='dark' ? 'white' : 'black'}
           >
             Смотреть ещё
           </Link>

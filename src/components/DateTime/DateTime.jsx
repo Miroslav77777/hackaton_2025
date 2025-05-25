@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 
-const DateTime = ({margTop}) => {
+import { observer } from 'mobx-react-lite';
+import themeStore from '../../stores/ThemeStore';
+
+const DateTime = observer(({margTop}) => {
   const [dateTime, setDateTime] = useState(new Date());
 
   useEffect(() => {
@@ -20,8 +23,8 @@ const DateTime = ({margTop}) => {
 
   return (
     <Box display="flex" flexDirection="column" alignItems="flex-start" gap={3} px={'27px'} py={'25px'} marginTop={margTop} sx={{
-        background: '#252736',
-        borderRadius: '15px',
+        background: themeStore.mode === 'dark' ? '#252736' : 'linear-gradient(180deg, #FFF 0%, #F0F2FF 100%)',
+        borderRadius: '15px', 
         width: '20vw'
     }}>
         <Typography>
@@ -38,6 +41,6 @@ const DateTime = ({margTop}) => {
       </Box>
     </Box>
   );
-};
+});
 
 export default DateTime;
